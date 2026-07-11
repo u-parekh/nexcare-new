@@ -1,0 +1,63 @@
+import { Link } from "react-router-dom";
+import { Instagram, Linkedin, Facebook, Mail, Phone, Download } from "lucide-react";
+import { LogoMark } from "./LogoMark";
+import { brochureURL, trackBrochure } from "../lib/api";
+
+const Footer = () => (
+  <footer className="relative mt-24 border-t border-border bg-card" data-testid="footer">
+    <div className="max-w-7xl mx-auto px-6 lg:px-10 py-12 grid md:grid-cols-3 gap-8">
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <LogoMark className="h-9 w-auto"/>
+        </div>
+        <p className="text-sm text-muted-foreground leading-6 max-w-xs mb-4">
+          Healthcare consulting and hospital planning partners — designing spaces that heal, operate and scale.
+        </p>
+        
+        <a href={brochureURL} onClick={trackBrochure} data-testid="footer-brochure" className="inline-flex items-center gap-2 px-4 py-2.5 border-2 border-brand text-brand rounded-md text-sm font-semibold hover:bg-brand hover:text-white transition-colors">
+          <Download className="w-4 h-4"/> Download Brochure
+        </a>
+      </div>
+
+      <div>
+        <h4 className="font-display font-bold mb-3 text-sm uppercase tracking-wider">Company</h4>
+        <ul className="space-y-1.5 text-sm text-muted-foreground">
+          {[["/about","About"],["/vision","Our Vision"],["/services","Services"],["/projects","Projects"],["/blog","Blog"],["/career","Career"]].map(([h,l])=>(
+            <li key={h}><Link className="hover:text-brand transition-colors" to={h}>{l}</Link></li>
+          ))}
+        </ul>
+      </div>
+
+      <div>
+        <h4 className="font-display font-bold mb-3 text-sm uppercase tracking-wider">Contact</h4>
+        <ul className="space-y-2 text-sm text-muted-foreground mb-4">
+          <li className="flex items-start gap-2"><Mail className="w-4 h-4 mt-0.5 text-brand"/> hello@nexcare.health</li>
+          <li className="flex items-start gap-2"><Phone className="w-4 h-4 mt-0.5 text-brand"/> +91 98765 43210</li>
+          <li className="flex items-start gap-2"><Linkedin className="w-4 h-4 mt-0.5 text-brand"/>
+            <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="hover:text-brand transition-colors">linkedin.com/company/nexcare</a>
+          </li>
+        </ul>
+        <div className="flex gap-3">
+          {[
+            { i: Linkedin, h: "https://linkedin.com", k: "linkedin" },
+            { i: Instagram, h: "https://www.instagram.com/nexcare_04healthcaresolution?igsh=MWNzZjZ0ZnB3N3M4dg%3D%3D&utm_source=qr", k: "instagram" },
+            { i: Facebook, h: "https://facebook.com", k: "facebook" },
+          ].map(({ i: Ic, h, k }) => (
+            <a key={k} href={h} target="_blank" rel="noreferrer" data-testid={`social-${k}`} aria-label={k}
+               className="grid place-items-center w-9 h-9 rounded-md border border-border text-muted-foreground hover:text-white hover:bg-brand hover:border-brand transition-colors">
+              <Ic className="w-4 h-4"/>
+            </a>
+          ))}
+        </div>
+      </div>
+    </div>
+    <div className="border-t border-border">
+      <div className="max-w-7xl mx-auto px-6 lg:px-10 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
+        <p>© {new Date().getFullYear()} NEXCARE Healthcare Consulting. All rights reserved.</p>
+        <p className="font-display tracking-widest">DESIGN • PLAN • DELIVER</p>
+      </div>
+    </div>
+  </footer>
+);
+
+export default Footer;

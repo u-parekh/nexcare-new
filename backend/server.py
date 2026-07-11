@@ -35,24 +35,8 @@ NOTIFICATION_EMAIL = os.environ.get("NOTIFICATION_EMAIL", "umangparekh99@gmail.c
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "NexCare@2026")
 
 # SMTP / Mailtrap fallback (dev): configure these in backend/.env to enable
-SMTP_HOST = os.environ.get("SMTP_HOST", "")
-SMTP_PORT = int(os.environ.get("SMTP_PORT", "587")) if os.environ.get("SMTP_PORT") else 587
-SMTP_USER = os.environ.get("SMTP_USER", "")
-SMTP_PASS = os.environ.get("SMTP_PASS", "")
-SMTP_FROM = os.environ.get("SMTP_FROM", SENDER_EMAIL)
 
 # Friendly detection for Mailtrap (developer convenience)
-if SMTP_HOST:
-    try:
-        host_l = SMTP_HOST.lower()
-        if "mailtrap" in host_l or host_l.endswith("mailtrap.io"):
-            masked_user = (SMTP_USER[:3] + "***") if SMTP_USER else "(not provided)"
-            logger.info("Mailtrap SMTP configured (dev): messages will appear in Mailtrap. SMTP user=%s", masked_user)
-            logger.info("Open https://mailtrap.io to view caught messages for this account.")
-        else:
-            logger.info("SMTP configured: host=%s port=%s (from=%s)", SMTP_HOST, SMTP_PORT, SMTP_FROM)
-    except Exception:
-        logger.debug("SMTP host detection failed; continuing without Mailtrap hints.")
 
 app = FastAPI(title="NEXCARE API")
 #--api_router = APIRouter(prefix="/api")
@@ -154,43 +138,6 @@ def build_email_html(c: Contact) -> str:
 <div style="margin-top:16px;padding:16px;background:#F0F5F1;border-left:3px solid #3FB549;font-size:14px;line-height:1.6;">{c.message}</div>
 <p style="margin-top:24px;font-size:12px;color:#A0AEC0;">Submitted {c.created_at}</p></td></tr></table>"""
 
-
-async def _send_via_smtp(c: Contact) -> Optional[str]:
-    if not SMTP_HOST or not NOTIFICATION_EMAIL:
-        return None
-    msg = EmailMessage()
-    msg["Subject"] = f"NEXCARE • New enquiry from {c.name}"
-    msg["From"] = SMTP_FROM
-    msg["To"] = NOTIFICATION_EMAIL
-    if c.email:
-        msg["Reply-To"] = c.email
-    # Plain text fallback and HTML alternative
-    plain = f"New contact from {c.name} <{c.email}>\n\nMessage:\n{c.message}"
-    msg.set_content(plain)
-    msg.add_alternative(build_email_html(c), subtype="html")
-
-    def _send():
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as s:
-            s.ehlo()
-            # start TLS for common SMTP ports
-            try:
-                if SMTP_PORT in (587, 25):
-                    s.starttls()
-                    s.ehlo()
-            except Exception:
-                pass
-            if SMTP_USER:
-                s.login(SMTP_USER, SMTP_PASS)
-            s.send_message(msg)
-
-    try:
-        await asyncio.to_thread(_send)
-        return "smtp"
-    except Exception as e:
-        logger.error(f"SMTP send failed: {e}")
-        return None
-
-
 async def send_notification(c: Contact) -> Optional[str]:
     if not NOTIFICATION_EMAIL:
         return None
@@ -209,12 +156,6 @@ async def send_notification(c: Contact) -> Optional[str]:
             logger.error(f"Resend send failed: {e}")
 
     # Fallback to SMTP/Mailtrap if configured
-    if SMTP_HOST:
-        return await _send_via_smtp(c)
-
-    logger.warning("No email provider configured (Resend not set or failed, SMTP not configured). Skipping notification.")
-    return None
-
 
 def require_admin(x_admin_token: Optional[str] = Header(default=None)):
     if not x_admin_token or x_admin_token != ADMIN_PASSWORD:
